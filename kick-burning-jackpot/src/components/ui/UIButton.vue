@@ -1,12 +1,12 @@
 ﻿<template>
-  <button class="button" @click="$emit('click')">
+  <v-btn elevation="2" class="button" @click="$emit('click')">
     <template v-if="text">
       <span>{{ text }}</span>
     </template>
     <template v-else>
       <span><slot /></span>
     </template>
-  </button>
+  </v-btn>
 </template>
 
 <script>
