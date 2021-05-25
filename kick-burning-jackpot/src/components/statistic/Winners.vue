@@ -5,8 +5,9 @@
     </v-row>
     <v-row v-for="(winner, index) in winners" :key="index" v-model="records">
       <v-col cols="12" v-if="index < records">
-        {{ winner.date }} {{ winner.address }}
-        {{ winner.bet }}
+        {{ JSON.parse(winner).EndDate }} {{ JSON.parse(winner).Winner }}
+        <!-- {{ JSON.parse(winner).bet }} -->
+        {{ JSON.parse(winner).Jackpot }}
       </v-col>
     </v-row>
     <v-row>
@@ -20,12 +21,11 @@ export default {
   name: 'Winners',
   data: () => ({
     records: 2,
-    winners: [],
     text: 'Все',
     show: false,
   }),
   props: {
-    participants: {
+    winners: {
       type: Array,
       default: () => [{}],
     },
@@ -38,19 +38,20 @@ export default {
         this.records = 2;
       } else {
         this.text = 'Скрыть';
-        this.records = this.participants.length;
-      }
-    },
-    sortWinners() {
-      for (this.participant of this.participants) {
-        if (this.participant.result === 'win') {
-          this.winners.push(this.participant);
-        }
+        this.records = this.winners.length;
       }
     },
   },
-  beforeMount() {
-    this.sortWinners();
+  watch: {
+    $props: {
+      handler() {
+        if (this.show) {
+          this.records = this.winners.length;
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
   },
 };
 </script>

@@ -23,7 +23,7 @@ export default {
   }),
   methods: {
     connect: async function() {
-      this.$bia.connect((data) => {
+      this.$bia.connect(async (data) => {
         console.log('bia.connect');
         console.log(data);
         this.accountAddress = this.$bia.spliceAddress(data.address);

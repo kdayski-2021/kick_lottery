@@ -4,16 +4,23 @@
       <v-col>Псоледние победители</v-col>
     </v-row>
     <v-row>
-      <v-col>Дата</v-col>
-      <v-col>Адрес</v-col>
-      <v-col>Ставка</v-col>
-      <v-col>Итог</v-col>
+      <v-col cols="3">Дата</v-col>
+      <v-col cols="3">Адрес</v-col>
+      <v-col cols="3">Ставка</v-col>
+      <v-col cols="3">Итог</v-col>
     </v-row>
-    <v-row v-for="(participant, index) in participants" :key="index">
-      <v-col v-if="index < records">{{ participant.date }}</v-col>
-      <v-col v-if="index < records">{{ participant.address }}</v-col>
-      <v-col v-if="index < records">{{ participant.bet }}</v-col>
-      <v-col v-if="index < records">{{ participant.result }}</v-col>
+    <v-row v-for="(participant, index) in history" :key="index">
+      <v-col cols="3" v-if="index < records">{{
+        JSON.parse(participant).EndDate
+      }}</v-col>
+      <v-col cols="3" v-if="index < records">{{
+        JSON.parse(participant).Winner
+      }}</v-col>
+      <v-col cols="3" v-if="index < records"></v-col>
+      <!-- <v-col v-if="index < records">{{ JSON.parse(participant).Bet }}</v-col> -->
+      <v-col cols="3" v-if="index < records">{{
+        JSON.parse(participant).Jackpot
+      }}</v-col>
     </v-row>
     <v-row>
       <v-col @click="showRecords">{{ text }}</v-col>
@@ -30,7 +37,7 @@ export default {
     show: false,
   }),
   props: {
-    participants: {
+    history: {
       type: Array,
       default: () => [{}],
     },
@@ -43,8 +50,19 @@ export default {
         this.records = 2;
       } else {
         this.text = 'Скрыть';
-        this.records = this.participants.length;
+        this.records = this.history.length;
       }
+    },
+  },
+  watch: {
+    $props: {
+      handler() {
+        if (this.show) {
+          this.records = this.history.length;
+        }
+      },
+      deep: true,
+      immediate: true,
     },
   },
 };

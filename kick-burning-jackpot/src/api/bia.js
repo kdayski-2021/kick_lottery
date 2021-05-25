@@ -5,6 +5,9 @@ import ethProvider from 'eth-provider';
 import Authereum from 'authereum';
 import logoETH from '@/assets/img/eth.png';
 import logoBSC from '@/assets/img/binance.png';
+import { kikLotteryAddress, erc20burnableAddress } from '@/config/default.json';
+import { erc20burnableAbi } from '@/config/erc20burnableAbi.json';
+import { kikLotteryAbi } from '@/config/kikLotteryAbi.json';
 class Bia {
   constructor() {
     this.connected = false;
@@ -13,6 +16,8 @@ class Bia {
     this.accountAddress = '';
     this.contractAddress = '';
     this.contract = '';
+    this.erc20BurnableContract = '';
+    this.kikLotteryContract = '';
     this.daos = '';
     this.chainId = '';
     this.chainLogo = '';
@@ -24,9 +29,12 @@ class Bia {
   getContractAddress(chainId) {
     switch (chainId) {
       case 4:
-        return '0x6545d195760E4680AF5656C0a143c654EF7B0424';
+        // return '0x6545d195760E4680AF5656C0a143c654EF7B0424';
+        return erc20burnableAddress;
+      // return kikLotteryAddress;
       case 97:
-        return '0x204cD2BDB15aCF401B90cDE79b5Cc93dd2fEf816';
+        // return '0x204cD2BDB15aCF401B90cDE79b5Cc93dd2fEf816';
+        return '';
       case 1:
         return '';
       case 56:
@@ -51,101 +59,12 @@ class Bia {
     }
   }
 
-  async getDaoFactoryContract() {
-    const contractAddress = this.getContractAddress(this.chainId);
+  async getKikLotteryContract() {
+    console.log(kikLotteryAbi);
+    const contractAddress = kikLotteryAddress;
     if (contractAddress) {
       const contract = await new this.web3.eth.Contract(
-        [
-          {
-            inputs: [
-              {
-                internalType: 'string',
-                name: 'nameDao',
-                type: 'string',
-              },
-              {
-                internalType: 'string',
-                name: 'descriptionDao',
-                type: 'string',
-              },
-              {
-                internalType: 'string',
-                name: 'gpTokenName',
-                type: 'string',
-              },
-              {
-                internalType: 'string',
-                name: 'gpTokenSymbol',
-                type: 'string',
-              },
-              {
-                internalType: 'string',
-                name: 'lpTokenName',
-                type: 'string',
-              },
-              {
-                internalType: 'string',
-                name: 'lpTokenSymbol',
-                type: 'string',
-              },
-            ],
-            name: 'createDao',
-            outputs: [],
-            stateMutability: 'nonpayable',
-            type: 'function',
-          },
-          {
-            inputs: [
-              {
-                internalType: 'address',
-                name: 'owner',
-                type: 'address',
-              },
-            ],
-            name: 'getDaos',
-            outputs: [
-              {
-                components: [
-                  {
-                    internalType: 'string',
-                    name: 'NameDao',
-                    type: 'string',
-                  },
-                  {
-                    internalType: 'string',
-                    name: 'DescriptionDao',
-                    type: 'string',
-                  },
-                  {
-                    internalType: 'string',
-                    name: 'GpTokenName',
-                    type: 'string',
-                  },
-                  {
-                    internalType: 'string',
-                    name: 'GpTokenSymbol',
-                    type: 'string',
-                  },
-                  {
-                    internalType: 'string',
-                    name: 'LpTokenName',
-                    type: 'string',
-                  },
-                  {
-                    internalType: 'string',
-                    name: 'LpTokenSymbol',
-                    type: 'string',
-                  },
-                ],
-                internalType: 'struct DaoFactory.DaoInfo[]',
-                name: '',
-                type: 'tuple[]',
-              },
-            ],
-            stateMutability: 'view',
-            type: 'function',
-          },
-        ],
+        kikLotteryAbi,
         contractAddress
       );
       return contract;
@@ -154,7 +73,112 @@ class Bia {
     }
   }
 
-  async connect(callback) {
+  async getERC20BurnableContract() {
+    console.log(erc20burnableAbi);
+    // const contractAddress = this.getContractAddress(this.chainId);
+    const contractAddress = erc20burnableAddress;
+    if (contractAddress) {
+      const contract = await new this.web3.eth.Contract(
+        erc20burnableAbi,
+        contractAddress
+      );
+      return contract;
+    } else {
+      return undefined;
+    }
+  }
+
+  async approve(amount, callback = () => {}) {
+    if (this.connected) {
+      console.log(`from: ${this.accountAddress}`);
+      await this.erc20BurnableContract.methods
+        .approve(kikLotteryAddress, amount)
+        .send({ from: this.accountAddress }, (err, result) => {
+          callback(result);
+        });
+    } else {
+      this.connect(() => {
+        this.approve(amount, (data) => {
+          console.log(`hash ${data}`);
+        });
+      });
+    }
+  }
+
+  async join(amount, callback = () => {}) {
+    console.log(`from: ${this.accountAddress}`);
+    await this.kikLotteryContract.methods
+      .join(amount)
+      .send({ from: this.accountAddress }, (err, result) => {
+        callback(result);
+      });
+  }
+
+  getAllowance() {
+    return new Promise((resolve, reject) => {
+      if (this.connected) {
+        this.erc20BurnableContract.methods
+          .allowance(kikLotteryAddress, this.accountAddress)
+          .call((err, res) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(Number(res));
+          });
+      } else {
+        resolve(0);
+      }
+    });
+  }
+
+  getJackpot() {
+    return new Promise((resolve, reject) => {
+      if (this.connected) {
+        this.kikLotteryContract.methods.Jackpot().call((err, res) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(Number(res));
+        });
+      } else {
+        resolve(0);
+      }
+    });
+  }
+
+  getRoundNumber() {
+    return new Promise((resolve, reject) => {
+      if (this.connected) {
+        this.kikLotteryContract.methods.RoundNumber().call((err, res) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(Number(res));
+        });
+      } else {
+        resolve(0);
+      }
+    });
+  }
+
+  getHistory(roundNumber) {
+    return new Promise((resolve, reject) => {
+      if (this.connected) {
+        this.kikLotteryContract.methods
+          .History(roundNumber)
+          .call((err, res) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(JSON.stringify(res));
+          });
+      } else {
+        resolve('');
+      }
+    });
+  }
+
+  async connect(callback = () => {}) {
     if (!this.connected) {
       const providerOptions = {
         mewconnect: {
@@ -192,6 +216,8 @@ class Bia {
               this.canChangeNetwork = true;
               this.chainLogo = this.getChainLogo(this.chainId);
               this.networkName = await this.web3.eth.net.getNetworkType();
+              this.erc20BurnableContract = await this.getERC20BurnableContract();
+              this.kikLotteryContract = await this.getKikLotteryContract();
               callback({
                 address: this.accountAddress,
                 success: true,
@@ -217,69 +243,11 @@ class Bia {
     }
   }
 
-  async createDao(params, callback) {
-    if (!this.connected) {
-      alert('Need to connect');
-    } else {
-      await this.web3.eth
-        .getChainId()
-        .then(async (r) => {
-          this.chainId = r;
-          if (this.appChainId === r) {
-            this.contract = await this.getDaoFactoryContract();
-            if (this.contract) {
-              this.contract.methods
-                .createDao(
-                  params.daoName,
-                  params.daoDescription,
-                  params.gpTokenName,
-                  params.gpTokenSymbol,
-                  params.lpTokenName,
-                  params.lpTokenSymbol
-                )
-                .send({ from: this.accountAddress }, (err, result) => {
-                  this.contractAddress = result;
-                  callback(err);
-                });
-            } else {
-              callback(undefined);
-            }
-          } else {
-            callback('wrong network');
-          }
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    }
-  }
-
   setChainId(cb = () => {}) {
     this.web3.eth.getChainId().then(async (r) => {
       this.chainId = r;
       cb(r);
     });
-  }
-
-  async getDao(callback) {
-    if (!this.connected) {
-      alert('Need to connect');
-    } else {
-      this.setChainId(async (chainId) => {
-        console.log(chainId);
-        this.contract = await this.getDaoFactoryContract();
-        if (this.contract) {
-          this.contract.methods
-            .getDaos(this.accountAddress)
-            .call((err, result) => {
-              this.daos = result;
-              callback(this.daos);
-            });
-        } else {
-          callback(undefined);
-        }
-      });
-    }
   }
 
   spliceAddress(address) {

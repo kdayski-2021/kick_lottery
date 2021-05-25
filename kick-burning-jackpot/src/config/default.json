@@ -1,5 +1,5 @@
 ﻿{
   "networkParameters": {},
-  "ownedContractAddress": "0xd9145CCE52D386f254917e481eB44e9943F39138",
-  "safeMathContractAddress": "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8"
+  "kikLotteryAddress": "0x3e6F653c956Dcb4eeC188AdE3e3EbA9425dCd3F1",
+  "erc20burnableAddress": "0xFF7204023E5Abad95f3f3b6a4Be67F22152FA75b"
 }
