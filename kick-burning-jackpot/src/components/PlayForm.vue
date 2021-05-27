@@ -5,7 +5,7 @@
       <v-text-field
         v-model="tokens"
         :error-messages="tokensErrors"
-        label="KiK"
+        label="Kick"
         required
         @input="$v.tokens.$touch()"
         @blur="$v.tokens.$touch()"
@@ -13,7 +13,7 @@
       <v-btn
         class="mr-4"
         @click="approve"
-        :disabled="approveDisabled"
+        :disabled="Boolean(approved) || approveDisabled"
         :loading="approveLoading"
       >
         Approve
@@ -27,6 +27,31 @@
         Play
       </v-btn>
     </form>
+
+    <v-dialog v-model="dialog" max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span v-if="participant.IsWinner"
+            >Your jackpot is {{ participant.Jackpot }} Kick tokens</span
+          >
+          <span v-else
+            >You lost {{ participant.Bet ? participant.Bet : 0 }} Kick
+            tokens</span
+          >
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <v-card-actions>
+          <v-btn
+            color="primary"
+            text
+            @click="dialog = false"
+            class="text-right"
+          >
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -48,6 +73,8 @@ export default {
     approveLoading: false,
     playDisabled: false,
     playLoading: false,
+    dialog: false,
+    participant: {},
   }),
 
   props: {
@@ -91,19 +118,30 @@ export default {
     },
     async play() {
       await this.$v.$touch();
-      console.log(`joining ${this.approved} tokens`);
-      await this.$bia.join(this.approved, (data) => {
-        console.log(`hash ${data}`);
-        if (data) {
-          this.playLoading = true;
-          this.approveDisabled = true;
-        }
-      });
+      if (Number(this.tokens) === this.approved) {
+        console.log(`playing on ${this.approved} tokens`);
+        await this.$bia.play(this.approved, async (data) => {
+          console.log(`hash ${data}`);
+          if (data) {
+            this.playLoading = true;
+            this.approveDisabled = true;
+          }
+        });
+        await this.showDialog();
+      }
+    },
+    async showDialog() {
+      let round = await this.$bia.getRoundNumber();
+      round = Number(round) - 1;
+      let result = await this.$bia.getHistory(round);
+      result = JSON.parse(result);
+      this.dialog = true;
+      this.participant = result;
     },
   },
   watch: {
     $props: {
-      handler() {
+      async handler() {
         if (this.approved !== 0) {
           this.approveLoading = false;
           this.playDisabled = false;

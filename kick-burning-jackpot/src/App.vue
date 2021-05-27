@@ -3,7 +3,7 @@
     <v-main>
       <v-container>
         <ConnectWallet />
-        <Lottery />
+        <Lottery :bestLottery="bestLottery" />
         <Jackpot :jackpot="jackpot" />
         <PlayForm :approved="allowance" :jackpot="jackpot" />
         <Statistic :history="history" :winners="winners" />
@@ -35,6 +35,7 @@ export default {
     jackpot: 0,
     history: [],
     winners: [],
+    bestLottery: {},
   }),
 
   methods: {
@@ -53,22 +54,38 @@ export default {
     sortWinners() {
       for (this.participant of this.history) {
         if (
-          this.participant.includes('Winner') &&
+          JSON.parse(this.participant).IsWinner &&
           !this.winners.includes(this.participant)
         ) {
           this.winners.push(this.participant);
         }
       }
     },
+    async getBestLottery() {
+      let bestLottery = 0;
+      let curLottery = 0;
+      let bestLotteryIndex = 0;
+      for (let i = 0; i < this.history.length; i++) {
+        curLottery = await JSON.parse(this.history[i]).Jackpot;
+        if (Number(bestLottery) < Number(curLottery)) {
+          bestLottery = curLottery;
+          bestLotteryIndex = i;
+        }
+      }
+      return JSON.parse(this.history[bestLotteryIndex]);
+    },
   },
 
   mounted() {
     setInterval(async () => {
-      const roundNumber = await this.$bia.getRoundNumber();
-      this.jackpot = await this.$bia.getJackpot();
-      this.allowance = await this.$bia.getAllowance();
-      await this.getHistory(roundNumber);
-      await this.sortWinners();
+      if (this.$bia.connected) {
+        this.roundNumber = await this.$bia.getRoundNumber();
+        this.jackpot = await this.$bia.getJackpot();
+        this.allowance = await this.$bia.getAllowance();
+        await this.getHistory(this.roundNumber);
+        await this.sortWinners();
+        this.bestLottery = await this.getBestLottery();
+      }
 
       // console.log(`allowance: ${this.allowance}`);
       // console.log(`jackpot: ${this.jackpot}`);

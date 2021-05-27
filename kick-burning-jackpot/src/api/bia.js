@@ -7,7 +7,7 @@ import logoETH from '@/assets/img/eth.png';
 import logoBSC from '@/assets/img/binance.png';
 import { kikLotteryAddress, erc20burnableAddress } from '@/config/default.json';
 import { erc20burnableAbi } from '@/config/erc20burnableAbi.json';
-import { kikLotteryAbi } from '@/config/kikLotteryAbi.json';
+import { kickLotteryAbi } from '@/config/kickLotteryAbi.json';
 class Bia {
   constructor() {
     this.connected = false;
@@ -60,11 +60,11 @@ class Bia {
   }
 
   async getKikLotteryContract() {
-    console.log(kikLotteryAbi);
+    console.log(kickLotteryAbi);
     const contractAddress = kikLotteryAddress;
     if (contractAddress) {
       const contract = await new this.web3.eth.Contract(
-        kikLotteryAbi,
+        kickLotteryAbi,
         contractAddress
       );
       return contract;
@@ -105,10 +105,10 @@ class Bia {
     }
   }
 
-  async join(amount, callback = () => {}) {
+  async play(amount, callback = () => {}) {
     console.log(`from: ${this.accountAddress}`);
     await this.kikLotteryContract.methods
-      .join(amount)
+      .play(amount)
       .send({ from: this.accountAddress }, (err, result) => {
         callback(result);
       });

@@ -25,7 +25,7 @@ export default {
     winners: {
       type: Array,
       default: () => [{}],
-    }
+    },
   },
 };
 </script>

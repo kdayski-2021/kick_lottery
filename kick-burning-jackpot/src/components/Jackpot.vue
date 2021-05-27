@@ -1,6 +1,6 @@
 ﻿<template>
   <v-container>
-    <div>Джекпот: {{ jackpot }} KiK</div>
+    <div>Jackpot: {{ jackpot }} Kick</div>
   </v-container>
 </template>
 

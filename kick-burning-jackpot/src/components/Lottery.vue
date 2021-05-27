@@ -1,7 +1,25 @@
 ﻿<template>
   <v-container>
-    <div class="title">KiK token lottery</div>
-    <div class="best-lottery">Best lottery of all time {{ bestLottery }}</div>
+    <v-row>
+      <v-col class="title">Kick token lottery</v-col>
+    </v-row>
+    <v-row>
+      <v-col class="best-lottery">
+        Best lottery of all time:
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="2">Date</v-col>
+      <v-col cols="6">Player</v-col>
+      <v-col cols="2">Bet</v-col>
+      <v-col cols="2">Jackpot</v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="2">{{ bestLottery.RunAt }}</v-col>
+      <v-col cols="6">{{ bestLottery.Player }}</v-col>
+      <v-col cols="2">{{ bestLottery.Bet }}</v-col>
+      <v-col cols="2">{{ bestLottery.Jackpot }}</v-col>
+    </v-row>
   </v-container>
 </template>
 
@@ -10,8 +28,8 @@ export default {
   name: 'Lottery',
   props: {
     bestLottery: {
-      type: Number,
-      default: 0,
+      type: Object,
+      default: () => ({}),
     },
   },
 };
