@@ -4,30 +4,60 @@
       <v-col>Last participants</v-col>
     </v-row>
     <v-row>
-      <v-col cols="2">Data</v-col>
-      <v-col cols="6">Player</v-col>
-      <v-col cols="2">Bet</v-col>
-      <v-col cols="2">Result</v-col>
-    </v-row>
-    <v-row v-for="(participant, index) in history" :key="index">
-      <v-col cols="2" v-if="index < records">{{
-        JSON.parse(participant).RunAt
-      }}</v-col>
-      <v-col cols="6" v-if="index < records">{{
-        JSON.parse(participant).Player
-      }}</v-col>
-      <v-col cols="2" v-if="index < records">{{
-        JSON.parse(participant).Bet
-      }}</v-col>
-      <v-col cols="2" v-if="index < records"
-        >{{ JSON.parse(participant).IsWinner ? 'win' : 'lose' }}
+      <v-col>
+        <v-simple-table dense>
+          <template v-slot:default>
+            <thead>
+              <tr>
+                <th class="text-left">
+                  Data
+                </th>
+                <th class="text-left">
+                  Player
+                </th>
+                <th class="text-left">
+                  Bet
+                </th>
+                <th class="text-left">
+                  Result
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(participant, index) in history
+                  .slice()
+                  .reverse()
+                  .slice(maxRecords * (page - 1))"
+                :key="index"
+              >
+                <td v-if="index < maxRecords">
+                  {{ format(JSON.parse(participant).RunAt) }}
+                </td>
+                <td v-if="index < maxRecords">
+                  {{ JSON.parse(participant).Player }}
+                </td>
+                <td v-if="index < maxRecords">
+                  {{ JSON.parse(participant).Bet }}
+                </td>
+                <td v-if="index < maxRecords">
+                  {{ JSON.parse(participant).IsWinner ? 'win' : 'lose' }}
+                </td>
+              </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
       </v-col>
     </v-row>
     <v-row>
       <v-col>
-        <v-btn class="mr-4" @click="showRecords">
-          {{ text }}
-        </v-btn>
+        <div class="text-center">
+          <v-pagination
+            v-model="page"
+            :length="pages"
+            :total-visible="7"
+          ></v-pagination>
+        </div>
       </v-col>
     </v-row>
   </v-container>
@@ -37,9 +67,10 @@
 export default {
   name: 'Winners',
   data: () => ({
-    records: 2,
-    text: 'Show all',
-    show: false,
+    maxRecords: 10,
+    records: 0,
+    page: 1,
+    pages: 1,
   }),
   props: {
     history: {
@@ -48,23 +79,24 @@ export default {
     },
   },
   methods: {
-    showRecords() {
-      this.show = !this.show;
-      if (!this.show) {
-        this.text = 'Show all';
-        this.records = 2;
-      } else {
-        this.text = 'Hide';
-        this.records = this.history.length;
-      }
+    format: (val) => {
+      const date = new Date(Number(val * 1000));
+      const month = date.getMonth() + 1;
+      const fromattedDate =
+        date.getDate() +
+        '.' +
+        (month < 10 ? '0' : '') +
+        month +
+        '.' +
+        date.getFullYear();
+      return fromattedDate;
     },
   },
   watch: {
     $props: {
       handler() {
-        if (this.show) {
-          this.records = this.history.length;
-        }
+        this.pages = Math.ceil(this.history.length / this.maxRecords);
+        this.records = this.history.length;
       },
       deep: true,
       immediate: true,

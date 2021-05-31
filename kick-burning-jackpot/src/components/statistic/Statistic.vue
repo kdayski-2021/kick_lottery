@@ -1,8 +1,8 @@
 ﻿<template>
   <v-container>
     <v-row>
-      <v-col><Winners :winners="winners"/></v-col>
-      <v-col><Giveaway :history="history"/></v-col>
+      <v-col cols="6"><Winners :winners="winners"/></v-col>
+      <v-col cols="6"><Giveaway :history="history"/></v-col>
     </v-row>
   </v-container>
 </template>
