@@ -31,18 +31,12 @@
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
         <v-card-title>
-          <span v-if="participant.IsWinner"
-            >Your jackpot is {{ participant.Jackpot }} Kick tokens</span
-          >
-          <span v-else
-            >You lost {{ participant.Bet ? participant.Bet : 0 }} Kick
-            tokens</span
-          >
+          <span>{{ dialogText }}</span>
           <v-spacer></v-spacer>
         </v-card-title>
         <v-card-actions>
           <v-btn
-            color="primary"
+            :color="dialogColor"
             text
             @click="dialog = false"
             class="text-right"
@@ -74,7 +68,8 @@ export default {
     playDisabled: false,
     playLoading: false,
     dialog: false,
-    participant: {},
+    dialogText: {},
+    dialogColor: 'primary',
   }),
 
   props: {
@@ -105,38 +100,41 @@ export default {
   methods: {
     async approve() {
       await this.$v.$touch();
-      if (this.tokens > 0) {
-        console.log(`approving ${this.tokens} tokens`);
-        await this.$bia.approve(this.tokens, (data) => {
-          console.log(`hash ${data}`);
-          if (data) {
-            this.approveLoading = true;
-            this.playDisabled = true;
-          }
-        });
+      if (!this.$bia.connected) {
+        this.dialogText = 'Connect first';
+        this.dialogColor = '#cc3300';
+        this.dialog = true;
+      } else {
+        if (this.tokens > 0) {
+          await this.$bia.approve(this.tokens, (data) => {
+            if (data) {
+              this.approveLoading = true;
+              this.playDisabled = true;
+            }
+          });
+        }
       }
     },
     async play() {
       await this.$v.$touch();
       if (Number(this.tokens) === this.approved) {
-        console.log(`playing on ${this.approved} tokens`);
         await this.$bia.play(this.approved, async (data) => {
-          console.log(`hash ${data}`);
           if (data) {
             this.playLoading = true;
             this.approveDisabled = true;
           }
         });
-        await this.showDialog();
+        let round = await this.$bia.getRoundNumber();
+        round = Number(round) - 1;
+        let result = await this.$bia.getHistory(round);
+        if (result.IsWinner) {
+          this.dialogText = `Your jackpot is ${result.Jackpot} Kick tokens`;
+        } else {
+          this.dialogText = `You lost ${result.Bet ? result.Bet : 0} Kick
+            tokens`;
+        }
+        this.dialog = true;
       }
-    },
-    async showDialog() {
-      let round = await this.$bia.getRoundNumber();
-      round = Number(round) - 1;
-      let result = await this.$bia.getHistory(round);
-      result = JSON.parse(result);
-      this.dialog = true;
-      this.participant = result;
     },
   },
   watch: {

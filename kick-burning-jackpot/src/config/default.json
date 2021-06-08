@@ -1,5 +1,7 @@
 ﻿{
-  "networkParameters": {},
-  "kikLotteryAddress": "0x9d53416ceeaCbE48e286Fe4254Ca68f378854d58",
-  "erc20burnableAddress": "0xEF298D4B033535dD4e323c1454a9964852F89eDC"
+  "networkParameters": {
+    "rpc": "https://rinkeby.infura.io/v3/facd693a8e764005bf265d603b34a4f9"
+  },
+  "kikLotteryAddress": "0x2033E1185BEB2185A3CcCE6f66B8B62D3560de5f",
+  "erc20burnableAddress": "0x40A376009e650FcA9E17c91eDeE0Bce83315e337"
 }

@@ -29,13 +29,13 @@
                 :key="index"
               >
                 <td v-if="index < maxRecords">
-                  {{ format(JSON.parse(winner).RunAt) }}
+                  {{ formatDate(winner.RunAt) }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ JSON.parse(winner).Player }}
+                  {{ winner.Player }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ JSON.parse(winner).Jackpot }}
+                  {{ winner.Jackpot }}
                 </td>
               </tr>
             </tbody>
@@ -70,20 +70,6 @@ export default {
     winners: {
       type: Array,
       default: () => [{}],
-    },
-  },
-  methods: {
-    format: (val) => {
-      const date = new Date(Number(val * 1000));
-      const month = date.getMonth() + 1;
-      const fromattedDate =
-        date.getDate() +
-        '.' +
-        (month < 10 ? '0' : '') +
-        month +
-        '.' +
-        date.getFullYear();
-      return fromattedDate;
     },
   },
   watch: {

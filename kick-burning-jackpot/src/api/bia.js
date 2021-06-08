@@ -5,7 +5,11 @@ import ethProvider from 'eth-provider';
 import Authereum from 'authereum';
 import logoETH from '@/assets/img/eth.png';
 import logoBSC from '@/assets/img/binance.png';
-import { kikLotteryAddress, erc20burnableAddress } from '@/config/default.json';
+import {
+  kikLotteryAddress,
+  erc20burnableAddress,
+  networkParameters,
+} from '@/config/default.json';
 import { erc20burnableAbi } from '@/config/erc20burnableAbi.json';
 import { kickLotteryAbi } from '@/config/kickLotteryAbi.json';
 class Bia {
@@ -14,11 +18,12 @@ class Bia {
     this.provider = '';
     this.web3 = '';
     this.accountAddress = '';
-    this.contractAddress = '';
+    this.web3Infura = '';
+    this.erc20BurnableContractRpc = '';
+    this.kikLotteryContractRpc = '';
     this.contract = '';
     this.erc20BurnableContract = '';
     this.kikLotteryContract = '';
-    this.daos = '';
     this.chainId = '';
     this.chainLogo = '';
     this.networkName = '';
@@ -26,22 +31,15 @@ class Bia {
     this.canChangeNetwork = false;
   }
 
-  getContractAddress(chainId) {
-    switch (chainId) {
-      case 4:
-        // return '0x6545d195760E4680AF5656C0a143c654EF7B0424';
-        return erc20burnableAddress;
-      // return kikLotteryAddress;
-      case 97:
-        // return '0x204cD2BDB15aCF401B90cDE79b5Cc93dd2fEf816';
-        return '';
-      case 1:
-        return '';
-      case 56:
-        return '';
-      default:
-        return '';
-    }
+  async connectRpc() {
+    this.web3Infura = new Web3(networkParameters.rpc);
+    this.erc20BurnableContractRpc = await this.getERC20BurnableContract(
+      this.web3Infura
+    );
+    this.kikLotteryContractRpc = await this.getKikLotteryContract(
+      this.web3Infura
+    );
+    this.connectedRpc = true;
   }
 
   getChainLogo(chainId) {
@@ -59,13 +57,11 @@ class Bia {
     }
   }
 
-  async getKikLotteryContract() {
-    console.log(kickLotteryAbi);
-    const contractAddress = kikLotteryAddress;
-    if (contractAddress) {
-      const contract = await new this.web3.eth.Contract(
+  async getKikLotteryContract(web3) {
+    if (kikLotteryAddress) {
+      const contract = await new web3.eth.Contract(
         kickLotteryAbi,
-        contractAddress
+        kikLotteryAddress
       );
       return contract;
     } else {
@@ -73,14 +69,11 @@ class Bia {
     }
   }
 
-  async getERC20BurnableContract() {
-    console.log(erc20burnableAbi);
-    // const contractAddress = this.getContractAddress(this.chainId);
-    const contractAddress = erc20burnableAddress;
-    if (contractAddress) {
-      const contract = await new this.web3.eth.Contract(
+  async getERC20BurnableContract(web3) {
+    if (erc20burnableAddress) {
+      const contract = await new web3.eth.Contract(
         erc20burnableAbi,
-        contractAddress
+        erc20burnableAddress
       );
       return contract;
     } else {
@@ -90,7 +83,6 @@ class Bia {
 
   async approve(amount, callback = () => {}) {
     if (this.connected) {
-      console.log(`from: ${this.accountAddress}`);
       await this.erc20BurnableContract.methods
         .approve(kikLotteryAddress, amount)
         .send({ from: this.accountAddress }, (err, result) => {
@@ -98,15 +90,12 @@ class Bia {
         });
     } else {
       this.connect(() => {
-        this.approve(amount, (data) => {
-          console.log(`hash ${data}`);
-        });
+        this.approve(amount);
       });
     }
   }
 
   async play(amount, callback = () => {}) {
-    console.log(`from: ${this.accountAddress}`);
     await this.kikLotteryContract.methods
       .play(amount)
       .send({ from: this.accountAddress }, (err, result) => {
@@ -117,7 +106,7 @@ class Bia {
   getAllowance() {
     return new Promise((resolve, reject) => {
       if (this.connected) {
-        this.erc20BurnableContract.methods
+        this.erc20BurnableContractRpc.methods
           .allowance(kikLotteryAddress, this.accountAddress)
           .call((err, res) => {
             if (err) {
@@ -133,8 +122,8 @@ class Bia {
 
   getJackpot() {
     return new Promise((resolve, reject) => {
-      if (this.connected) {
-        this.kikLotteryContract.methods.Jackpot().call((err, res) => {
+      if (this.connectedRpc) {
+        this.kikLotteryContractRpc.methods.Jackpot().call((err, res) => {
           if (err) {
             reject(err);
           }
@@ -148,8 +137,8 @@ class Bia {
 
   getRoundNumber() {
     return new Promise((resolve, reject) => {
-      if (this.connected) {
-        this.kikLotteryContract.methods.RoundNumber().call((err, res) => {
+      if (this.connectedRpc) {
+        this.kikLotteryContractRpc.methods.RoundNumber().call((err, res) => {
           if (err) {
             reject(err);
           }
@@ -163,17 +152,67 @@ class Bia {
 
   getHistory(roundNumber) {
     return new Promise((resolve, reject) => {
-      if (this.connected) {
-        this.kikLotteryContract.methods
+      if (this.connectedRpc) {
+        this.kikLotteryContractRpc.methods
           .History(roundNumber)
           .call((err, res) => {
             if (err) {
               reject(err);
             }
-            resolve(JSON.stringify(res));
+            resolve(res);
           });
       } else {
         resolve('');
+      }
+    });
+  }
+
+  getHistoryArray() {
+    return new Promise((resolve, reject) => {
+      if (this.connectedRpc) {
+        this.kikLotteryContractRpc.methods.getHistory().call((err, res) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(res);
+        });
+      }
+    });
+  }
+
+  getWinnersArray() {
+    return new Promise((resolve, reject) => {
+      if (this.connectedRpc) {
+        this.kikLotteryContractRpc.methods.getHistory().call((err, res) => {
+          if (err) {
+            reject(err);
+          }
+          const winnersArray = res.filter((player) => player.IsWinner);
+          resolve(winnersArray);
+        });
+      }
+    });
+  }
+
+  getBestLottery() {
+    return new Promise((resolve, reject) => {
+      if (this.connectedRpc) {
+        this.kikLotteryContractRpc.methods
+          .getHistory()
+          .call(async (err, res) => {
+            if (err) {
+              reject(err);
+            }
+            let bestLottery = 0;
+            let bestLotteryIndex = 0;
+            for (let i = 0; i < res.length; i++) {
+              if (Number(bestLottery) < Number(res[i].Jackpot)) {
+                bestLottery = await res[i].Jackpot;
+                bestLotteryIndex = i;
+              }
+            }
+            resolve(res[bestLotteryIndex]);
+          });
       }
     });
   }
@@ -182,22 +221,21 @@ class Bia {
     if (!this.connected) {
       const providerOptions = {
         mewconnect: {
-          package: MewConnect, // required
+          package: MewConnect,
           options: {
-            infuraId: '1fa62a71dee94d9ebc1fc18e82207e55', // required
+            infuraId: '1fa62a71dee94d9ebc1fc18e82207e55',
           },
         },
         frame: {
-          package: ethProvider, // required
+          package: ethProvider,
         },
         authereum: {
-          package: Authereum, // required
+          package: Authereum,
         },
       };
       const web3Modal = new Web3Modal({
-        // network: "mainnet", // optional
-        cacheProvider: false, // optional
-        providerOptions, // required
+        cacheProvider: false,
+        providerOptions,
         theme: 'dark',
       });
       web3Modal.clearCachedProvider();
@@ -216,38 +254,26 @@ class Bia {
               this.canChangeNetwork = true;
               this.chainLogo = this.getChainLogo(this.chainId);
               this.networkName = await this.web3.eth.net.getNetworkType();
-              this.erc20BurnableContract = await this.getERC20BurnableContract();
-              this.kikLotteryContract = await this.getKikLotteryContract();
+              this.erc20BurnableContract = await this.getERC20BurnableContract(
+                this.web3
+              );
+              this.kikLotteryContract = await this.getKikLotteryContract(
+                this.web3
+              );
               callback({
                 address: this.accountAddress,
                 success: true,
               });
-              // if ([1, 4, 56, 97].includes(r)) {
-              //     callback({
-              //         address: this.accountAddress,
-              //         success: true
-              //     });
-              // } else {
-              //     callback(undefined);
-              // }
             });
           });
         })
-        .catch((e) => {
-          console.log(e);
+        .catch(() => {
           callback({ address: null, success: false });
         });
     } else {
       this.networkName = await this.web3.eth.net.getNetworkType();
       callback({ address: this.accountAddress, success: true });
     }
-  }
-
-  setChainId(cb = () => {}) {
-    this.web3.eth.getChainId().then(async (r) => {
-      this.chainId = r;
-      cb(r);
-    });
   }
 
   spliceAddress(address) {

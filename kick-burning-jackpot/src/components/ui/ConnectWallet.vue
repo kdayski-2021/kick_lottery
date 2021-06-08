@@ -1,22 +1,23 @@
 ﻿<template>
   <v-container>
-    <UIButton v-if="!walletConnected" color="primary" outlined @click="connect">
+    <v-btn
+      elevation="2"
+      v-if="!walletConnected"
+      color="primary"
+      outlined
+      @click="connect"
+    >
       Connect Wallet
-    </UIButton>
-    <UIButton v-else color="primary" outlined @click="disconnect">
+    </v-btn>
+    <v-btn elevation="2" v-else color="primary" outlined>
       {{ accountAddress }}
-    </UIButton>
+    </v-btn>
   </v-container>
 </template>
 
 <script>
-import UIButton from '@/components/ui/UIButton';
-
 export default {
   name: 'ConnectWallet',
-  components: {
-    UIButton,
-  },
   data: () => ({
     walletConnected: false,
     accountAddress: '',
@@ -24,18 +25,12 @@ export default {
   methods: {
     connect: async function() {
       this.$bia.connect(async (data) => {
-        console.log('bia.connect');
-        console.log(data);
         this.accountAddress = this.$bia.spliceAddress(data.address);
         this.walletConnected = data.success;
         if ([1, 4, 56, 97].includes(this.$bia.chainId)) {
           this.network = this.$bia.networkName;
         }
       });
-    },
-    disconnect: function() {
-      console.log('close');
-      // prov.disconnect()
     },
   },
 };

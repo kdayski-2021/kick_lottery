@@ -8,6 +8,20 @@ Vue.config.productionTip = false;
 
 Vue.prototype.$bia = new Bia();
 
+Vue.mixin({
+  methods: {
+    formatDate: (val) => {
+      const date = new Date(Number(val * 1000));
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      return `${day < 10 ? `0${day}` : day}.
+        ${month < 10 ? `0${month}` : month}.
+        ${year}`;
+    },
+  },
+});
+
 new Vue({
   Vuelidate,
   vuetify,

@@ -32,16 +32,16 @@
                 :key="index"
               >
                 <td v-if="index < maxRecords">
-                  {{ format(JSON.parse(participant).RunAt) }}
+                  {{ formatDate(participant.RunAt) }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ JSON.parse(participant).Player }}
+                  {{ participant.Player }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ JSON.parse(participant).Bet }}
+                  {{ participant.Bet }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ JSON.parse(participant).IsWinner ? 'win' : 'lose' }}
+                  {{ participant.IsWinner ? 'win' : 'lose' }}
                 </td>
               </tr>
             </tbody>
@@ -76,20 +76,6 @@ export default {
     history: {
       type: Array,
       default: () => [{}],
-    },
-  },
-  methods: {
-    format: (val) => {
-      const date = new Date(Number(val * 1000));
-      const month = date.getMonth() + 1;
-      const fromattedDate =
-        date.getDate() +
-        '.' +
-        (month < 10 ? '0' : '') +
-        month +
-        '.' +
-        date.getFullYear();
-      return fromattedDate;
     },
   },
   watch: {

@@ -15,7 +15,7 @@
       <v-col cols="2">Jackpot</v-col>
     </v-row>
     <v-row>
-      <v-col cols="2">{{ bestLottery.RunAt }}</v-col>
+      <v-col cols="2">{{ formatDate(bestLottery.RunAt) }}</v-col>
       <v-col cols="6">{{ bestLottery.Player }}</v-col>
       <v-col cols="2">{{ bestLottery.Bet }}</v-col>
       <v-col cols="2">{{ bestLottery.Jackpot }}</v-col>
@@ -26,12 +26,7 @@
 <script>
 export default {
   name: 'Lottery',
-  props: {
-    bestLottery: {
-      type: Object,
-      default: () => ({}),
-    },
-  },
+  props: ['bestLottery'],
 };
 </script>
 
