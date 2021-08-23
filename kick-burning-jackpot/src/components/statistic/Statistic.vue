@@ -2,7 +2,7 @@
   <v-container>
     <v-row>
       <v-col cols="6"><Winners :winners="winners"/></v-col>
-      <v-col cols="6"><Giveaway :history="history"/></v-col>
+      <v-col cols="6"><Giveaway :participants="participants"/></v-col>
     </v-row>
   </v-container>
 </template>
@@ -18,7 +18,7 @@ export default {
     Giveaway,
   },
   props: {
-    history: {
+    participants: {
       type: Array,
       default: () => [{}],
     },

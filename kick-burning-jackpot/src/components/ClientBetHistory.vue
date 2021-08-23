@@ -1,7 +1,7 @@
 ﻿<template>
   <v-container>
     <v-row>
-      <v-col>Last participants</v-col>
+      <v-col>История ставок клиента:</v-col>
     </v-row>
     <v-row>
       <v-col>
@@ -10,38 +10,39 @@
             <thead>
               <tr>
                 <th class="text-left">
-                  Data
+                  Номер раунда
                 </th>
                 <th class="text-left">
-                  Player
+                  Статус раунда (завершен, завершается, активен)
                 </th>
                 <th class="text-left">
-                  Bet
+                  Размер ставки
                 </th>
                 <th class="text-left">
-                  Result
+                  Выиграл/не выиграл. Если выиграл, то сколько + ссылка на
+                  транзакцию
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="(participant, index) in participants
+                v-for="(item, index) in clientBetHistory
                   .slice()
                   .reverse()
                   .slice(maxRecords * (page - 1))"
                 :key="index"
               >
                 <td v-if="index < maxRecords">
-                  {{ formatDate(participant.RunAt) }}
+                  {{ item.roundNumber }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ participant.Player }}
+                  {{ item.roundStatus }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ participant.Bet }}
+                  {{ item.bet }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ participant.IsWinner ? 'win' : 'lose' }}
+                  <span>{{ item.iswin }} {{ item.prize }}</span>
                 </td>
               </tr>
             </tbody>
@@ -65,7 +66,7 @@
 
 <script>
 export default {
-  name: 'Winners',
+  name: 'ClientBetHistory',
   data: () => ({
     maxRecords: 10,
     records: 0,
@@ -73,7 +74,7 @@ export default {
     pages: 1,
   }),
   props: {
-    participants: {
+    clientBetHistory: {
       type: Array,
       default: () => [{}],
     },
@@ -81,8 +82,8 @@ export default {
   watch: {
     $props: {
       handler() {
-        this.pages = Math.ceil(this.participants.length / this.maxRecords);
-        this.records = this.participants.length;
+        this.pages = Math.ceil(this.clientBetHistory.length / this.maxRecords);
+        this.records = this.clientBetHistory.length;
       },
       deep: true,
       immediate: true,

@@ -2,6 +2,6 @@
   "networkParameters": {
     "rpc": "https://rinkeby.infura.io/v3/facd693a8e764005bf265d603b34a4f9"
   },
-  "kikLotteryAddress": "0x2033E1185BEB2185A3CcCE6f66B8B62D3560de5f",
-  "erc20burnableAddress": "0x40A376009e650FcA9E17c91eDeE0Bce83315e337"
+  "kickLotteryAddress": "0x177ed172851aD8117BEa48Be11F07f37668CB063",
+  "erc20burnableAddress": "0x8a9E8a9Cdea51A0fA0d1FD363bB91589BE5A4eCB"
 }

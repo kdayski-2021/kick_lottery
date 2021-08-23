@@ -1,6 +1,6 @@
 ﻿<template>
   <v-container>
-    <div>Tokens approved: {{ approved }}</div>
+    <div>Tokens played: {{ tokens }}</div>
     <form>
       <v-text-field
         v-model="tokens"
@@ -12,19 +12,17 @@
       ></v-text-field>
       <v-btn
         class="mr-4"
-        @click="approve"
-        :disabled="Boolean(approved) || approveDisabled"
-        :loading="approveLoading"
-      >
-        Approve
-      </v-btn>
-      <v-btn
-        class="mr-4"
         @click="play"
-        :disabled="!Boolean(approved) || playDisabled"
+        :disabled="playDisabled"
         :loading="playLoading"
       >
         Play
+      </v-btn>
+      <v-btn class="mr-4" @click="checkRound">
+        Забрать выигрыш (Round Change)
+      </v-btn>
+      <v-btn class="mr-4" @click="checkRoundAdmin" :disabled="isTooFar">
+        Force Round Change
       </v-btn>
     </form>
 
@@ -63,8 +61,6 @@ export default {
 
   data: () => ({
     tokens: 0,
-    approveDisabled: false,
-    approveLoading: false,
     playDisabled: false,
     playLoading: false,
     dialog: false,
@@ -73,13 +69,13 @@ export default {
   }),
 
   props: {
-    approved: {
-      type: Number,
-      default: 0,
-    },
     jackpot: {
       type: Number,
       default: 0,
+    },
+    isTooFar: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -89,64 +85,54 @@ export default {
       if (!this.$v.tokens.$dirty) return errors;
       !this.$v.tokens.minValue && errors.push('Min value is 1!');
       !this.$v.tokens.required && errors.push('Tokens is required!');
-      if (this.approved > 0 && this.tokens != this.approved) {
-        errors.push('Value must be equal with approved amount!');
-        return errors;
-      }
       return errors;
     },
   },
 
   methods: {
-    async approve() {
-      await this.$v.$touch();
+    async checkRound() {
       if (!this.$bia.connected) {
-        this.dialogText = 'Connect first';
-        this.dialogColor = '#cc3300';
-        this.dialog = true;
+        this.popup('Connect first', '#cc3300');
       } else {
-        if (this.tokens > 0) {
-          await this.$bia.approve(this.tokens, (data) => {
-            if (data) {
-              this.approveLoading = true;
-              this.playDisabled = true;
-            }
-          });
-        }
+        const { message, status } = await this.$bia.checkRound();
+        this.popup(message, status);
       }
+    },
+    async checkRoundAdmin() {
+      if (!this.$bia.connected) {
+        this.popup('Connect first', '#cc3300');
+      } else {
+        await this.$bia.checkRoundAdmin();
+      }
+    },
+    popup(text, color) {
+      this.dialogText = text;
+      this.dialogColor = color;
+      this.dialog = true;
     },
     async play() {
       await this.$v.$touch();
-      if (Number(this.tokens) === this.approved) {
-        await this.$bia.play(this.approved, async (data) => {
-          if (data) {
-            this.playLoading = true;
-            this.approveDisabled = true;
-          }
-        });
-        let round = await this.$bia.getRoundNumber();
-        round = Number(round) - 1;
-        let result = await this.$bia.getHistory(round);
-        if (result.IsWinner) {
-          this.dialogText = `Your jackpot is ${result.Jackpot} Kick tokens`;
-        } else {
-          this.dialogText = `You lost ${result.Bet ? result.Bet : 0} Kick
-            tokens`;
+      if (!this.$bia.connected) {
+        this.popup('Connect first', '#cc3300');
+      } else {
+        if (Number(this.tokens) > 0) {
+          this.playLoading = true;
+          const data = await this.$bia.play(this.tokens);
+          console.log(data);
+          this.popup('Ставка принята', 'primary');
+          this.playLoading = false;
         }
-        this.dialog = true;
       }
     },
   },
   watch: {
     $props: {
       async handler() {
-        if (this.approved !== 0) {
-          this.approveLoading = false;
+        if (this.jackpot === 0) {
           this.playDisabled = false;
         }
         if (this.jackpot !== 0) {
           this.playLoading = false;
-          this.approveDisabled = false;
         }
       },
       deep: true,

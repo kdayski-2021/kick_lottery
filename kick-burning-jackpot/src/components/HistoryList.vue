@@ -1,7 +1,7 @@
 ﻿<template>
   <v-container>
     <v-row>
-      <v-col>Last participants</v-col>
+      <v-col>История завершенных раундов:</v-col>
     </v-row>
     <v-row>
       <v-col>
@@ -10,38 +10,44 @@
             <thead>
               <tr>
                 <th class="text-left">
-                  Data
+                  размер сожженных токенов
                 </th>
                 <th class="text-left">
-                  Player
+                  Дата завершения
                 </th>
                 <th class="text-left">
-                  Bet
+                  номер раунда
                 </th>
                 <th class="text-left">
-                  Result
+                  Размер джекпота
+                </th>
+                <th class="text-left">
+                  Количество победителей
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="(participant, index) in participants
+                v-for="(item, index) in historyList
                   .slice()
                   .reverse()
                   .slice(maxRecords * (page - 1))"
                 :key="index"
               >
                 <td v-if="index < maxRecords">
-                  {{ formatDate(participant.RunAt) }}
+                  {{ item.burnedTotal }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ participant.Player }}
+                  {{ formatDate(item.endDate) }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ participant.Bet }}
+                  {{ item.roundNumber }}
                 </td>
                 <td v-if="index < maxRecords">
-                  {{ participant.IsWinner ? 'win' : 'lose' }}
+                  {{ item.jackpot }}
+                </td>
+                <td v-if="index < maxRecords">
+                  {{ item.numwinners }}
                 </td>
               </tr>
             </tbody>
@@ -65,7 +71,7 @@
 
 <script>
 export default {
-  name: 'Winners',
+  name: 'HistoryList',
   data: () => ({
     maxRecords: 10,
     records: 0,
@@ -73,7 +79,7 @@ export default {
     pages: 1,
   }),
   props: {
-    participants: {
+    historyList: {
       type: Array,
       default: () => [{}],
     },
@@ -81,8 +87,8 @@ export default {
   watch: {
     $props: {
       handler() {
-        this.pages = Math.ceil(this.participants.length / this.maxRecords);
-        this.records = this.participants.length;
+        this.pages = Math.ceil(this.historyList.length / this.maxRecords);
+        this.records = this.historyList.length;
       },
       deep: true,
       immediate: true,

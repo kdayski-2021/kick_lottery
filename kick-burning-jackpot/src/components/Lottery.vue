@@ -5,20 +5,20 @@
     </v-row>
     <v-row>
       <v-col class="best-lottery">
-        Best lottery of all time:
+        Просмотр Текущего раунда:
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="2">Date</v-col>
-      <v-col cols="6">Player</v-col>
-      <v-col cols="2">Bet</v-col>
-      <v-col cols="2">Jackpot</v-col>
+      <v-col cols="4">размер текущего джекпота</v-col>
+      <v-col cols="4"
+        >Время до окончания раунда/до окончания приема ставок</v-col
+      >
+      <v-col cols="4">Количество участников</v-col>
     </v-row>
     <v-row>
-      <v-col cols="2">{{ formatDate(bestLottery.RunAt) }}</v-col>
-      <v-col cols="6">{{ bestLottery.Player }}</v-col>
-      <v-col cols="2">{{ bestLottery.Bet }}</v-col>
-      <v-col cols="2">{{ bestLottery.Jackpot }}</v-col>
+      <v-col cols="4">{{ currentLottery.jackpot }}</v-col>
+      <v-col cols="4">{{ currentLottery.endBets }}</v-col>
+      <v-col cols="4">{{ currentLottery.members }}</v-col>
     </v-row>
   </v-container>
 </template>
@@ -26,7 +26,7 @@
 <script>
 export default {
   name: 'Lottery',
-  props: ['bestLottery'],
+  props: ['currentLottery'],
 };
 </script>
 
