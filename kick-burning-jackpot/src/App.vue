@@ -3,10 +3,14 @@
     <v-main>
       <v-container>
         <ConnectWallet :accountAddress="accountAddress" />
-        <Lottery :bestLottery="bestLottery" />
-        <Jackpot :jackpot="jackpot" />
-        <PlayForm :approved="allowance" :jackpot="jackpot" />
-        <Statistic :history="history" :winners="winners" />
+        <Lottery :currentLottery="currentLottery" />
+        <HistoryList :historyList="historyList" />
+        <CompletedRoundHistory :completedRoundHistory="completedRoundHistory" />
+        <ClientBetHistory :clientBetHistory="clientBetHistory" />
+        <PlayForm :jackpot="jackpot" :isTooFar="isTooFar" />
+
+        <!-- <Jackpot :jackpot="jackpot" />
+        <Statistic :participants="participants" :winners="winners" /> -->
       </v-container>
     </v-main>
   </v-app>
@@ -14,9 +18,13 @@
 
 <script>
 import Lottery from '@/components/Lottery';
-import Jackpot from '@/components/Jackpot';
+import HistoryList from '@/components/HistoryList';
+import CompletedRoundHistory from '@/components/CompletedRoundHistory';
+import ClientBetHistory from '@/components/ClientBetHistory';
 import PlayForm from '@/components/PlayForm';
-import Statistic from '@/components/statistic/Statistic';
+
+// import Jackpot from '@/components/Jackpot';
+// import Statistic from '@/components/statistic/Statistic';
 import ConnectWallet from '@/components/ui/ConnectWallet';
 
 export default {
@@ -24,34 +32,58 @@ export default {
 
   components: {
     Lottery,
-    Jackpot,
+    HistoryList,
+    CompletedRoundHistory,
+    ClientBetHistory,
     PlayForm,
-    Statistic,
+
+    // Jackpot,
+    // Statistic,
     ConnectWallet,
   },
 
   data: () => ({
+    roundNumber: 0,
+    currentLottery: {},
+    historyList: [],
+    completedRoundHistory: {},
+    clientBetHistory: [],
+    isTooFar: true,
+
     allowance: 0,
     jackpot: 0,
-    history: [],
+    participants: [],
     winners: [],
     bestLottery: {},
     accountAddress: '',
   }),
 
   async mounted() {
-    await this.$bia.connectRpc();
-    this.roundNumber = await this.$bia.getRoundNumber();
-    this.bestLottery = await this.$bia.getBestLottery();
-    setInterval(async () => {
-      if (this.$bia.connectedRpc) {
-        this.jackpot = await this.$bia.getJackpot();
-        this.allowance = await this.$bia.getAllowance();
-        this.history = await this.$bia.getHistoryArray();
-        this.winners = await this.$bia.getWinnersArray();
-        this.bestLottery = await this.$bia.getBestLottery();
-      }
-    }, 5000);
+    try {
+      await this.$bia.connectRpc();
+      setInterval(async () => {
+        if (this.$bia.connectedRpc) {
+          this.roundNumber = await this.$bia.getRoundNumber();
+          this.isTooFar = await this.$bia.isTooFar();
+          this.currentLottery = await this.$bia.getCurrentLottery();
+          this.historyList = await this.$bia.getHistoryArray();
+          this.completedRoundHistory = await this.$bia.getCompletedRoundHistory(
+            this.roundNumber === 0 ? 0 : this.roundNumber - 1
+          );
+          this.clientBetHistory = await this.$bia.getClientBetHistory(
+            this.roundNumber
+          );
+
+          // this.jackpot = await this.$bia.getJackpot();
+          // this.allowance = await this.$bia.getAllowance();
+          // this.participants = await this.$bia.getParticipantsArray();
+          // this.winners = await this.$bia.getWinnersArray();
+          // this.bestLottery = await this.$bia.getBestLottery();
+        }
+      }, 5000);
+    } catch (e) {
+      console.log(e);
+    }
   },
 };
 </script>
